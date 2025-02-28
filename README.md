@@ -4,11 +4,9 @@
 
 This is a fork from the original project which I used to reverse engineer how the StreamDock AKP03 plugins work.
 
-I am working to get it up and running to control the OL-Master application.
+I am working to get it up and running to send command via MQTT and WebSocket.
 
-## Mqtt OL-Master plugin
-
-This plugin is used to control the OL-Master software with macros and useful features
+## Mqtt plugin
 
 ### Features
 
@@ -48,8 +46,8 @@ The manifest file is used by the Ajazz app to kwnow how the plugin works, for ex
     "SDKVersion": 2,
     "Author": "DevAny",
     "CodePath": "bin/release/StreamDock.Plugins.Payload",
-    "Description": "StreamDock plugin to send commands to Mqtt OL-Master software.",
-    "Name": "IU2FRL OL-Master plugin",
+    "Description": "StreamDock plugin to send MQTT commands via WS.",
+    "Name": "IU2FRL MQTT over WS plugin",
     "Icon": "images/IU2FRL",
     "URL": "https://www.iu2frl.it/",
     "Version": "1.0",
@@ -66,37 +64,48 @@ The manifest file is used by the Ajazz app to kwnow how the plugin works, for ex
     "CategoryIcon": "images/Mqtt",
     "Actions": [
         {
-            "Name": "Toggle Receiver 1",
-            "Tooltip": "Toggle main power to RX 1",
-            "UUID": "it.iu2frl.streamdock.mqtt.togglerx1",
-            "Icon": "images/Mqtt",
+            "PropertyInspectorPath": "property-inspector.html",
+            "Name": "Send MQTT Message",
+            "Tooltip": "Sends a message to the MQTT broker when button is pressed",
             "Controllers": [
-                "Keypad",
-                "Information"
+                "Keypad"
             ],
-            "SupportedInMultiActions": false
+            "UUID": "it.iu2frl.streamdock.mqtt.mqttbutton",
+            "Icon": "images/Mqtt",
+            "SupportedInMultiActions": true
         },
         {
-            "Name": "MOX Receiver 1", // Name of the object in the actions list
-            "Tooltip": "Toggle receive/transmit RX 1", // Shown when hovering on the action
-            "UUID": "it.iu2frl.streamdock.mqtt.togglemox1", // Name of the PluginActionId in C# code
-            "Icon": "images/Mqtt", // Name of the png file to be shown in the actions list
-            "Controllers": [ // Not completely clear
-                "Keypad",
-                "Information"
+            "PropertyInspectorPath": "property-inspector.html",
+            "Name": "Send MQTT Message",
+            "Tooltip": "Sends a message to the MQTT broker when knob is rotated",
+            "Controllers": [
+                "Knob"
             ],
-            "SupportedInMultiActions": false // Not completely clear
+            "UUID": "it.iu2frl.streamdock.mqtt.mqttknob",
+            "Icon": "images/Mqtt",
+            "SupportedInMultiActions": true
         },
         {
-            "Name": "Debug",
+            "PropertyInspectorPath": "property-inspector.html",
+            "Name": "Keypad Debug",
             "Tooltip": "This function only prints to the log",
-            "UUID": "it.iu2frl.streamdock.debug",
-            "Icon": "images/Mqtt",
             "Controllers": [
-                "Keypad",
-                "Information"
+                "Keypad"
             ],
-            "SupportedInMultiActions": false
+            "UUID": "it.iu2frl.streamdock.keypaddebug",
+            "Icon": "images/Mqtt",
+            "SupportedInMultiActions": true
+        },
+        {
+            "PropertyInspectorPath": "property-inspector.html",
+            "Name": "Dial Debug",
+            "Tooltip": "This function only prints to the log",
+            "Controllers": [
+                "Knob"
+            ],
+            "UUID": "it.iu2frl.streamdock.dialdebug",
+            "Icon": "images/Mqtt",
+            "SupportedInMultiActions": true
         }
     ]
 }

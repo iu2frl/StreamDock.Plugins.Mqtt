@@ -20,17 +20,37 @@ namespace MqttButton
     // Tooltip: Sends a message to the MQTT broker when button is pressed
     // Controllers: Keypad
     [PluginActionId("it.iu2frl.streamdock.mqtt.mqttbutton")]
-    public class MqttButton(ISDConnection connection, InitialPayload payload) : Common.BaseKeypadMqttItem(connection, payload)
+    public class MqttButton : Common.BaseKeypadMqttItem
     {
+        #region Button Configuration
+        private string action;
+        private string command;
+        private string subReceiver;
+
+        public MqttButton(ISDConnection connection, InitialPayload payload) : base(connection, payload)
+        {
+            LoadSettings(payload.Settings);
+        }
+
+        public override void ReceivedSettings(ReceivedSettingsPayload payload)
+        {
+            base.ReceivedSettings(payload);
+            LoadSettings(payload.Settings);
+            Logger.Instance.LogMessage(TracingLevel.INFO, $"ReceivedSettings called. Content: {payload}");
+        }
+
+        private void LoadSettings(dynamic settings)
+        {
+            action = settings.action ?? "toggle";
+            command = settings.command ?? "enable";
+            subReceiver = settings.subReceiver ?? "false";
+        }
+        #endregion
+
         public override void KeyPressed(KeyPayload payload)
         {
-            var command = new Common.ReceiverCommand
-            {
-                Action = "toggle",
-                Command = "enable",
-                SubReceiver = "false"
-            };
-            Common.MQTT_Client.PublishMessageAsync("receivers/command/1", JsonSerializer.Serialize(command)).Wait();
+            var command = "";
+            Common.MQTT_Client.PublishMessageAsync("receivers/command/1", command).Wait();
             Logger.Instance.LogMessage(TracingLevel.INFO, "KeyPressed called");
         }
 
@@ -39,26 +59,9 @@ namespace MqttButton
             await Connection.SetImageAsync(Common.StreamDock.UpdateKeyImage($"RX 1"));
         }
 
-        public override void MQTT_StatusReceived(int receiverNumber, ReceiverStatus command)
+        public override void MQTT_StatusReceived(string payload)
         {
-            try
-            {
-                if (receiverNumber == 1)
-                {
-                    if (command.ReceiverA.Enabled == "True")
-                    {
-                        Connection.SetImageAsync(Common.StreamDock.UpdateKeyImage($"RX1\nEnabled")).Wait();
-                    }
-                    else
-                    {
-                        Connection.SetImageAsync(Common.StreamDock.UpdateKeyImage($"RX1\nDisabled")).Wait();
-                    }
-                }
-            }
-            catch (Exception retExc)
-            {
-                Logger.Instance.LogMessage(TracingLevel.WARN, $"Cannot parse payload: {retExc.Message}");
-            }
+            
         }
     }
 }
@@ -79,26 +82,14 @@ namespace MqttKnob
             if (payload.Ticks > 0)
             {
                 // Clockwise rotation
-                var command = new Common.ReceiverCommand
-                {
-                    Action = "+",
-                    Command = "frequency",
-                    Value = "",
-                    SubReceiver = "false"
-                };
-                Common.MQTT_Client.PublishMessageAsync("receivers/command/1", JsonSerializer.Serialize(command)).Wait();
+                var command = "";
+                Common.MQTT_Client.PublishMessageAsync("receivers/command/1", command).Wait();
             }
             else
             {
                 // Counter-clockwise rotation
-                var command = new Common.ReceiverCommand
-                {
-                    Action = "-",
-                    Command = "frequency",
-                    Value = "",
-                    SubReceiver = "false"
-                };
-                Common.MQTT_Client.PublishMessageAsync("receivers/command/1", JsonSerializer.Serialize(command)).Wait();
+                var command = "";
+                Common.MQTT_Client.PublishMessageAsync("receivers/command/1", command).Wait();
             }
         }
     }
@@ -314,90 +305,6 @@ namespace Common
         public static bool UseWebSocket { get; set; } = true;
     }
 
-    public class ReceiverCommand
-    {
-        [JsonPropertyName("software_id")]
-        public string SoftwareId = Environment.MachineName;
-
-        [JsonPropertyName("subreceiver")]
-        public string SubReceiver { get; set; }
-
-        [JsonPropertyName("command")]
-        public string Command { get; set; }
-
-        [JsonPropertyName("action")]
-        public string Action { get; set; }
-
-        [JsonPropertyName("value")]
-        public string Value { get; set; }
-    }
-
-    public class ReceiverStatus
-    {
-        [JsonPropertyName("software_id")]
-        public string SoftwareId { get; set; }
-
-        [JsonPropertyName("txpower")]
-        public string TxPower { get; set; }
-
-        [JsonPropertyName("monitor_vol")]
-        public string MonitorVolume { get; set; }
-
-        [JsonPropertyName("band")]
-        public string Band { get; set; }
-
-        [JsonPropertyName("swr")]
-        public string SWR { get; set; }
-
-        [JsonPropertyName("master_vol")]
-        public string MasterVolume { get; set; }
-
-        [JsonPropertyName("temperature")]
-        public string Temperature { get; set; }
-
-        [JsonPropertyName("current")]
-        public string Current { get; set; }
-
-        [JsonPropertyName("receiver_a")]
-        public ReceiverStatusDetail ReceiverA { get; set; }
-
-        [JsonPropertyName("receiver_b")]
-        public ReceiverStatusDetail ReceiverB { get; set; }
-    }
-
-    public class ReceiverStatusDetail
-    {
-        [JsonPropertyName("active")]
-        public string Enabled { get; set; }
-
-        [JsonPropertyName("frequency")]
-        public string Frequency { get; set; }
-
-        [JsonPropertyName("mode")]
-        public string Mode { get; set; }
-
-        [JsonPropertyName("filterlow")]
-        public string FilterLow { get; set; }
-
-        [JsonPropertyName("filterhigh")]
-        public string FilterHigh { get; set; }
-
-        [JsonPropertyName("volume")]
-        public string Volume { get; set; }
-
-        [JsonPropertyName("squelch")]
-        public string Squelch { get; set; }
-
-        [JsonPropertyName("mox")]
-        public string Mox { get; set; }
-
-        [JsonPropertyName("txvfo")]
-        public string TxVfo { get; set; }
-
-        [JsonPropertyName("signal")]
-        public string Signal { get; set; }
-    }
-
     public class BaseKeypadMqttItem : KeypadBase
     {
         #region StreamDock events
@@ -444,16 +351,10 @@ namespace Common
         #region Custom events
         private void MQTT_Client_OnMessageReceived(string topic, string payload)
         {
-            //Logger.Instance.LogMessage(TracingLevel.INFO, "MQTT Message received");
-            var command = JsonSerializer.Deserialize<ReceiverStatus>(payload);
-            int.TryParse(topic.Substring(topic.Length - 1, 1), out var receiverNumber);
-            if (command != null && receiverNumber > 0 && receiverNumber <= 4)
-            {
-                MQTT_StatusReceived(receiverNumber, command);
-            }
+            MQTT_StatusReceived(payload);
         }
 
-        public virtual void MQTT_StatusReceived(int receiverNumber, ReceiverStatus command)
+        public virtual void MQTT_StatusReceived(string payload)
         {
 
         }

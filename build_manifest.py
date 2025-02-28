@@ -58,6 +58,9 @@ def extract_actions_from_cs(cs_file):
         if uuid_match:
             current_action['UUID'] = uuid_match.group(1)
 
+        # Set the PropertyInspectorPath for each action
+        current_action['PropertyInspectorPath'] = "property-inspector.html"
+
         # When all required fields are found, append action and reset current_action
         if 'Name' in current_action and 'Tooltip' in current_action and 'UUID' in current_action:
             # Default values for Icon and Controllers
