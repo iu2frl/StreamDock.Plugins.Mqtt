@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)it.iu2frl.streamdock.mqtt.sdPlugin\bin</ArtifactsPath>
+  </PropertyGroup>
+</Project>
