@@ -6,6 +6,10 @@ This is a fork from the original project which I used to reverse engineer how th
 
 I am working to get it up and running to send command via MQTT and WebSocket.
 
+## Deprecation notice
+
+Even if this code is a good starting point, I will concentrate my efforts on the Olliter version of this plugin: [https://github.com/iu2frl/StreamDock.Plugins.Olliter](https://github.com/iu2frl/StreamDock.Plugins.Olliter)
+
 ## Mqtt plugin
 
 ### Features
